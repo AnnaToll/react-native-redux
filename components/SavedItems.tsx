@@ -40,7 +40,7 @@ export const SavedItems = () => {
                     renderItem={({ item }) => (
                     <View key={item.id}>
                       <Image
-                          style={{ ...styles.img, aspectRatio: item.image.ratio || 1 }}
+                          style={{ ...styles.img, aspectRatio: item.image.ratio }}
                           source={{ uri: item.image.uri }}
                       />
                       <Text style={styles.name}>{item.name}</Text>
@@ -71,7 +71,7 @@ export const SavedItems = () => {
                               key={Math.floor((Date.now() * Math.random()) * 10)}
                             >
                               <Image 
-                                style={{ ...styles.imgSmall, aspectRatio: costumeImage.ratio || 0.7 }}
+                                style={{ ...styles.imgSmall, aspectRatio: costumeImage.ratio }}
                                 source={{ uri: costumeImage.uri}}
                               />
                             </View>

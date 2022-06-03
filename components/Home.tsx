@@ -1,16 +1,15 @@
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, Button, TouchableOpacity, Image } from 'react-native';
+import { StyleSheet, Text, View, TextInput } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import SavedItems from "./SavedItems"
 import CharactersList from './CharactersList';
-import * as ImagePicker from 'expo-image-picker';
-import { Camera } from 'expo-camera';
 import CameraComponent from './CameraComponent';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../redux/store'
 import SearchResult from './SearchResult';
-import { searchCharacter, closePhotoPicker, savePhoto, editCameraData } from '../redux/reducers/charactersListsSlice';
+import { searchCharacter } from '../redux/reducers/charactersListsSlice';
+import PhotoPicker from './PhotoPicker';
 
 
 const Home = () => {
@@ -18,51 +17,9 @@ const Home = () => {
   const dispatch = useDispatch()
   const [displayInfo, setDisplayInfo] = useState<string>('Star wars-karaktärer');
   const searchResult = useSelector((state: RootState) => state.characters.searchResult)
+  const { isOpen: isCameraOpen } = useSelector((state: RootState) => state.characters.cameraData)
   const { isActive: photoPickerIsActive } = useSelector((state: RootState) => state.characters.photoPicker)
-  const { isOpen: isCameraOpen, hasPermission, canAskAgain } = useSelector((state: RootState) => state.characters.cameraData)
 
-
-  const saveLibraryPhoto = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({ allowsEditing: true })
-    if (!result.cancelled) {
-        let counter = 0;
-        const getImgRatio = () => {
-            Image.getSize(result.uri, (width, height) => {
-                let ratio = Math.round((width / height) * 100) / 100
-                dispatch(savePhoto({ uri: result.uri, ratio }))
-            }, () => {
-                if (counter < 3) {
-                    counter++
-                    getImgRatio()
-                } else {
-                    dispatch(savePhoto({ uri: result.uri, ratio: 0.7 })) 
-                }
-            }) 
-        }
-
-        getImgRatio()
-
-    }
-    
-    else if (result.cancelled)
-      dispatch(closePhotoPicker())
-  }
-
-
-  const openCamera = async () => {
-    if (hasPermission)
-      dispatch(editCameraData({ isOpen: true }))
-    else if (!canAskAgain)
-      return
-    else {
-      const permission = await Camera.requestCameraPermissionsAsync();
-      dispatch(editCameraData({
-        hasPermission: permission.granted,
-        canAskAgain: permission.canAskAgain,
-        isOpen: permission.granted ? true : false 
-      }))
-    }
-  }
 
 
   const handleInput = (value: string) => { 
@@ -81,28 +38,8 @@ const Home = () => {
           {isCameraOpen ?
             <CameraComponent />
             :
-            <View style={styles.container}>
-            
-              {photoPickerIsActive && 
-                <TouchableOpacity 
-                  style={styles.photoOptionsContainer}
-                >
-                  <Button 
-                    title='Bläddra'
-                    onPress={saveLibraryPhoto}
-                  />
-                  <View style={styles.separator}></View>
-                  <Button 
-                    title='Ta ny bild'
-                    onPress={openCamera}
-                  />
-                  <View style={styles.separator}></View>
-                  <Button 
-                    title='Avbryt'
-                    onPress={() => dispatch(closePhotoPicker())}
-                  />
-                </TouchableOpacity> 
-              }
+            <View style={styles.container}>            
+             { photoPickerIsActive && <PhotoPicker /> }
               <View>
                 <View style={styles.searchContainer}>
                   <TextInput 

@@ -1,19 +1,24 @@
 import 'react-native-gesture-handler';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Provider } from 'react-redux';
-import store from './redux/store'
+import store, { persistor } from './redux/store'
 import { NavigationContainer } from '@react-navigation/native';
 import Home from './components/Home';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import CostumeStacks from './components/CostumesStacks';
-import { useEffect } from 'react';
+import { PersistGate } from 'redux-persist/integration/react';
+
+
+
+
 
 const Drawer = createDrawerNavigator();
 
 const AppWrapper = () => {
   return (
     <Provider store={store}>
-      <App />
+      <PersistGate loading={null} persistor={persistor}>
+        <App />
+      </PersistGate>
     </Provider>
   )
 }
@@ -21,11 +26,10 @@ const AppWrapper = () => {
 export default AppWrapper
 
 
+
+
+
 const App = () => {
-
-  useEffect(() => {
-
-  }, [])
 
   return (
     <NavigationContainer>

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { StyleSheet, Text, View, FlatList, Image } from 'react-native';
 import { MaterialIcons, AntDesign } from '@expo/vector-icons';
 import { Character } from '../interfaces/interfaces';
@@ -15,6 +15,7 @@ const CharactersList = () => {
 
   const dispatch = useDispatch();
   const characters = useSelector((state: RootState) => state.characters.lists.allCharacters)
+  const isInitDataFetched = useSelector((state: RootState) => state.characters.isInitDataFetched)
 
   const fetchCharacters = async () => {
     const data = await fetch('https://akabab.github.io/starwars-api/api/all.json');
@@ -37,16 +38,18 @@ const CharactersList = () => {
     })
     dispatch(addAllCharacters(newArrData))
   }
-  
+
 
   useEffect(() => {
-    fetchCharacters()
+    if (!isInitDataFetched) {
+      fetchCharacters()
+    }
   }, [])
 
 
   const getImgRatio = (width: number, height: number, id: number) => {
     let ratio = Math.round((width / height) * 100) / 100
-    dispatch(addImgRatio({ id, ratio}))
+    dispatch(addImgRatio({ id, ratio }))
   }
 
 
@@ -54,12 +57,12 @@ const CharactersList = () => {
         <>
           <FlatList 
             data={characters}
-            initialNumToRender={4}
+            initialNumToRender={2}
             renderItem={({ item }) => (
               <View key={item.id} style={styles.characterContainer}>
                 <Image
                     onLoad={({nativeEvent: {source: {width, height}}}) => getImgRatio(width, height, item.id)}
-                    style={{ ...styles.img, aspectRatio: item.image.ratio || 0.7 }}
+                    style={{ ...styles.img, aspectRatio: item.image.ratio }}
                     source={{ uri: item.image.uri }}
                 />
                 <View style={styles.charInfoContainer}>
@@ -71,16 +74,18 @@ const CharactersList = () => {
                     <View style={styles.iconContainer}>
                       <IconContainerTouchable id={item.id} clickedIcon={'liked'}>
                         <MaterialIcons 
-                            style={styles.heartIcon} 
-                            name={item.status === 'liked' ? 'favorite' : 'favorite-outline'}
-                            size={25} 
-                            color="black" />
+                          style={styles.heartIcon} 
+                          name={item.status === 'liked' ? 'favorite' : 'favorite-outline'}
+                          size={25} 
+                          color="black" 
+                        />
                       </IconContainerTouchable>
                       <IconContainerTouchable id={item.id} clickedIcon={'costume made'}>
                         <AntDesign 
-                            name={item.status === 'costume made' ? 'android1' : 'android'} 
-                            size={22} 
-                            color="black" />
+                          name={item.status === 'costume made' ? 'android1' : 'android'} 
+                          size={22} 
+                          color="black" 
+                        />
                       </IconContainerTouchable>
                     </View>
                 </View>

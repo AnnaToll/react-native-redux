@@ -2,6 +2,7 @@ import { Character } from "../../interfaces/interfaces";
 import { createSlice } from "@reduxjs/toolkit";
 
 interface CharactersReduxState {
+    isInitDataFetched: boolean,
     lists: {
         allCharacters: Character[],
         likedCharacters: Character[],
@@ -12,6 +13,7 @@ interface CharactersReduxState {
         isOpen: boolean,
         hasPermission: boolean,
         canAskAgain: boolean,
+        ratio: number,
     },
     photoPicker: {
         isActive: boolean,
@@ -22,6 +24,7 @@ interface CharactersReduxState {
 }
 
 const initState: CharactersReduxState = {
+    isInitDataFetched: false,
     lists: {
         allCharacters: [],
         likedCharacters: [],
@@ -32,6 +35,7 @@ const initState: CharactersReduxState = {
         isOpen: false,
         hasPermission: false,
         canAskAgain: true,
+        ratio: 1,
     },
     photoPicker: {
         isActive: false,
@@ -55,6 +59,7 @@ const charactersListsSlice = createSlice({
     reducers: {
         addAllCharacters(state, action) {
             state.lists.allCharacters = action.payload;
+            state.isInitDataFetched = true;
         },
         moveCharacter(state, action) {
             const { clickedIcon, id } = action.payload;
@@ -65,16 +70,18 @@ const charactersListsSlice = createSlice({
                 if (index !== -1) {
                     const character = list[index]
                     const prevStatus = character.status
-                    character.status = action.payload.clickedIcon
-
+                    
                     if (prevStatus === clickedIcon) {
                         state.lists.allCharacters.unshift(character)
+                        character.status = 'not saved'
                     } else if (clickedIcon === 'liked') {
                         state.lists.likedCharacters.unshift(character)
                         state.savedCharactersBtn = 'liked'
+                        character.status = action.payload.clickedIcon
                     } else if (clickedIcon === 'costume made') {
                         state.lists.costumeMade.unshift(character)
                         state.savedCharactersBtn = 'costume'
+                        character.status = action.payload.clickedIcon
                     }
                     list.splice(index, 1)
                     break;
@@ -85,8 +92,8 @@ const charactersListsSlice = createSlice({
             if (action.payload.length === 0)
                 state.searchResult = []
             else {
-                const newArrAllLists = [...state.lists.costumeMade, ...state.lists.likedCharacters, ...state.lists.allCharacters]
-                const filteredCharacters: Character[] = newArrAllLists.filter(character => character.name.toLowerCase().includes(action.payload.toLowerCase()));
+                const newArr = [... state.lists.costumeMade, ...state.lists.likedCharacters, ...state.lists.allCharacters] 
+                const filteredCharacters: Character[] = newArr.filter(character => character.name.toLowerCase().includes(action.payload.toLowerCase()));
                 state.searchResult = filteredCharacters
             }
         },
@@ -101,6 +108,11 @@ const charactersListsSlice = createSlice({
             state.lists.costumeMade[index].costumeImages.push({ uri: action.payload.uri, ratio: action.payload.ratio })
             closePhotoPickerFunc(state)
         },
+        deletePhoto(state, action) {
+            const index = state.lists.costumeMade.findIndex(element => element.id === action.payload.id)
+            const newCostumeImageArr = state.lists.costumeMade[index].costumeImages.filter(images => images.uri !== action.payload.uri)
+            state.lists.costumeMade[index].costumeImages = newCostumeImageArr
+        },
         editCameraData(state, action) {
             state.cameraData = {...state.cameraData, ...action.payload}
         },
@@ -108,7 +120,6 @@ const charactersListsSlice = createSlice({
             state.savedCharactersBtn = action.payload.btn
         },
         addImgRatio(state, action) {
-            console.log('adding ratio')
             const index = state.lists.allCharacters.findIndex(character => character.id === action.payload.id)
             state.lists.allCharacters[index].image.ratio = action.payload.ratio 
         }
@@ -126,6 +137,7 @@ export const {
     editCameraData, 
     editSelectedCharactersBtn,
     addImgRatio,
+    deletePhoto,
 } = charactersListsSlice.actions;
 
 export default charactersListsSlice.reducer;

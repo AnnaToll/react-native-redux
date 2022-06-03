@@ -1,10 +1,12 @@
 import React from 'react';
-import { StyleSheet, Text, View, FlatList, Image } from 'react-native';
-import { useSelector } from 'react-redux'
+import { StyleSheet, Text, View, FlatList, Image, Pressable } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '../redux/store'
-import { TouchableOpacity } from 'react-native-gesture-handler';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Character } from '../interfaces/interfaces'
+import { openPhotoPicker } from '../redux/reducers/charactersListsSlice'
+import PhotoPicker from './PhotoPicker';
+import CameraComponent from './CameraComponent';
 
 
 type RootStackParamList = {
@@ -17,37 +19,52 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Costume'>;
 const Costumes = ({ navigation }: Props) => {
 
     const items = useSelector((state: RootState) => state.characters.lists.costumeMade)
+    const { isActive: photoPickerIsActive } = useSelector((state: RootState) => state.characters.photoPicker)
+    const { isOpen: isCameraOpen } = useSelector((state: RootState) => state.characters.cameraData)
+
+    const dispatch = useDispatch();
 
     return (
-        <View style={styles.container}>
-            <FlatList 
-                data={items}
-                renderItem={({ item }) => (
-                    <TouchableOpacity 
-                        onPress={() => navigation.navigate('Costume', { item: item })}
-                    >
-                        <View key={item.id} style={styles.itemContainer}>
-                            <Image 
-                                style={{ ...styles.lgImg, aspectRatio: item.image.ratio || 0.7 }}
-                                source={{ uri: item.image.uri}}
-                            />
-                            <View style={styles.itemRightContainer}>
-                                <Text style={styles.headline}>{item.name}</Text>
-                                <View style={styles.costumeImagesContainer}>
-                                    <View style={styles.line}/>
-                                    {item.costumeImages.map(costumeImage => (
-                                        <Image style={styles.smImg} key={`${Date.now()}${Math.floor(Math.random() * 1000)}`} source={{ uri: costumeImage.uri }} />
-                                    ))}
+        <>
+          {isCameraOpen ?
+            <CameraComponent />
+            :
+            <View style={styles.container}>
+                { photoPickerIsActive && <PhotoPicker /> }
+                <FlatList 
+                    data={items}
+                    renderItem={({ item }) => (
+                        <>
+                            <View key={item.id} style={styles.itemContainer}>
+                                <Image 
+                                    style={{ ...styles.lgImg, aspectRatio: item.image.ratio }}
+                                    source={{ uri: item.image.uri}}
+                                />
+                                <View style={styles.itemRightContainer}>
+                                    <Pressable onPress={() => navigation.navigate('Costume', { item: item })}>
+                                        <Text style={styles.headline}>{item.name}</Text>
+                                    </Pressable>
+                                    <View style={styles.costumeImagesContainer}>
+                                        <View style={styles.line}/>
+                                        {item.costumeImages.map(costumeImage => (
+                                            <Image style={styles.smImg} key={`${Date.now()}${Math.floor(Math.random() * 1000)}`} source={{ uri: costumeImage.uri }} />
+                                        ))}
+                                        <Pressable 
+                                            style={{ ...styles.smImg, ...styles.addImgBtn }}
+                                            onPress={() => dispatch(openPhotoPicker({id: item.id}))}
+                                        >
+                                            <Text>+ Add</Text>
+                                        </Pressable>
+                                    </View>
                                 </View>
                             </View>
-                        </View>
-                        <View style={styles.line}/>
-                    </TouchableOpacity>
-                )}
-            
-            />
-
-        </View>
+                            <View style={styles.line}/>
+                        </>
+                    )}
+                />
+            </View>
+            }
+        </>
     )
 }
 
@@ -89,7 +106,13 @@ const styles = StyleSheet.create({
     },
     smImg: {
         width: '48%',
-        height: 80,
+        height: 50,
+        aspectRatio: 1,
         marginTop: 6,
+    },
+    addImgBtn: { 
+        backgroundColor: '#dedede',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 })
